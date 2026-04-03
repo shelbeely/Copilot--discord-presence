@@ -16,6 +16,21 @@ RPC. It is **not** an OpenCode plugin — it runs as a background process indepe
 - **GitHub API**: native `fetch` (no Octokit)
 - **No test framework** is currently set up. `bun test` will run with no test files.
 
+## Copilot cloud agent environment setup
+
+Copilot's ephemeral GitHub Actions environment is pre-provisioned by
+`.github/workflows/copilot-setup-steps.yml`. This workflow installs Bun and runs
+`bun install --frozen-lockfile` **before** the agent starts, so all tools and
+dependencies are immediately available.
+
+Hook scripts in `.github/hooks/scripts/` run at agent lifecycle points:
+- `session-start.sh` — verifies the environment at the start of each session.
+- `validate.sh` — runs `typecheck → lint → build` after the agent stops, mirroring CI.
+
+To pass sensitive values (e.g. `GITHUB_TOKEN` for testing) into Copilot's environment,
+add them as secrets or variables in the **`copilot` GitHub Actions environment** via
+**Settings → Environments → copilot**.
+
 ## Build and validate — run in this exact order
 
 ```bash
@@ -76,11 +91,14 @@ src/
 .github/
 ├── copilot-instructions.md   # This file
 ├── hooks/
-│   ├── copilot.json          # Hook definitions for Copilot cloud agent
-│   └── scripts/              # Shell scripts invoked by hooks
+│   ├── copilot.json              # Hook definitions (sessionStart, agentStop)
+│   └── scripts/
+│       ├── session-start.sh      # Verifies bun + node_modules at session start
+│       └── validate.sh           # Runs typecheck + lint + build after agent stops
 └── workflows/
-    ├── ci.yml                # Runs on push/PR: install → typecheck → lint → build
-    └── publish.yml           # Runs on release: build → npm publish
+    ├── ci.yml                    # Runs on push/PR: install → typecheck → lint → build
+    ├── copilot-setup-steps.yml   # Pre-provisions Bun + deps in Copilot's environment
+    └── publish.yml               # Runs on release: build → npm publish
 
 dist/                     # TypeScript build output (gitignored)
 biome.json                # Biome lint + format config

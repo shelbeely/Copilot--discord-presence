@@ -22,6 +22,21 @@ function hasFinalConsonant(char: string): boolean {
 }
 
 /**
+ * Check if a word ends with a consonant sound for subject particle selection.
+ * For non-Korean text, consonant-ending English letters use 이, vowels use 가.
+ */
+function endsWithConsonantSound(word: string): boolean {
+  if (!word || word.length === 0) return false
+  const lastChar = word[word.length - 1]
+  const code = lastChar.charCodeAt(0)
+  if (code >= 0xac00 && code <= 0xd7a3) {
+    return (code - 0xac00) % 28 !== 0
+  }
+  // For English/Latin letters: vowel endings get 가, consonant endings get 이
+  return !/[aeiou]$/i.test(lastChar)
+}
+
+/**
  * Get the appropriate particle for 을/를 (object marker)
  * 을 after consonant, 를 after vowel
  */
@@ -39,4 +54,13 @@ export function getTopicParticle(word: string): string {
   if (!word || word.length === 0) return "는"
   const lastChar = word[word.length - 1]
   return hasFinalConsonant(lastChar) ? "은" : "는"
+}
+
+/**
+ * Get the appropriate particle for 이/가 (subject marker)
+ * 이 after consonant, 가 after vowel
+ */
+export function getSubjectParticle(word: string): string {
+  if (!word || word.length === 0) return "가"
+  return endsWithConsonantSound(word) ? "이" : "가"
 }

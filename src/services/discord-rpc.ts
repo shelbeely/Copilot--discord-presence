@@ -23,7 +23,7 @@ export class DiscordRPCService {
         this.client.on("ready", () => {
           this.connected = true
           this.retryCount = 0
-          console.log("[discord-presence] Connected to Discord")
+          console.log("[copilot-presence] Connected to Discord")
 
           if (this.currentPresence) {
             this.client?.user?.setActivity(this.currentPresence).catch(() => {})
@@ -34,17 +34,17 @@ export class DiscordRPCService {
 
         this.client.on("disconnected", () => {
           this.connected = false
-          console.log("[discord-presence] Disconnected")
+          console.log("[copilot-presence] Disconnected")
           this.scheduleReconnect()
         })
 
         this.client.login().catch((err) => {
-          console.log("[discord-presence] Connection failed:", err?.message || err)
+          console.log("[copilot-presence] Connection failed:", err?.message || err)
           this.scheduleReconnect()
           resolve(false)
         })
       } catch (error) {
-        console.log("[discord-presence] Error:", error)
+        console.log("[copilot-presence] Error:", error)
         this.scheduleReconnect()
         resolve(false)
       }
@@ -53,7 +53,7 @@ export class DiscordRPCService {
 
   private scheduleReconnect() {
     if (this.retryCount >= MAX_RETRIES) {
-      console.log("[discord-presence] Max retries reached")
+      console.log("[copilot-presence] Max retries reached")
       return
     }
     this.retryCount++
@@ -65,8 +65,8 @@ export class DiscordRPCService {
       details,
       state,
       startTimestamp: this.sessionStart,
-      largeImageKey: "opencode-logo",
-      largeImageText: "OpenCode",
+      largeImageKey: "copilot-logo",
+      largeImageText: "GitHub Copilot cloud agent",
     }
 
     this.currentPresence = activity
@@ -78,7 +78,7 @@ export class DiscordRPCService {
     try {
       await this.client.user.setActivity(activity)
     } catch (error) {
-      console.warn("[discord-presence] Failed to update:", error)
+      console.warn("[copilot-presence] Failed to update:", error)
     }
   }
 

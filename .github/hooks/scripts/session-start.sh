@@ -21,3 +21,16 @@ if [ ! -d "node_modules" ]; then
 fi
 
 echo "[copilot-presence] Environment ready."
+
+# Start Discord bot presence daemon in the background if a bot token is available.
+# The token must be stored as a secret in the 'copilot' GitHub Actions environment
+# (Settings → Environments → copilot → Secrets → DISCORD_BOT_TOKEN).
+if [ -n "${DISCORD_BOT_TOKEN:-}" ]; then
+  bun run src/bot-daemon.ts &
+  BOT_PID=$!
+  echo "[copilot-presence] Bot presence daemon started (PID: ${BOT_PID})"
+  echo "${BOT_PID}" > /tmp/copilot-bot-daemon.pid
+else
+  echo "[copilot-presence] DISCORD_BOT_TOKEN not set — bot presence daemon skipped."
+fi
+

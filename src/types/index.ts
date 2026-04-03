@@ -35,4 +35,16 @@ export interface CopilotAgentRun {
   createdAt: string
 }
 
+export interface GatewayPayload {
+  op: number
+  d: unknown
+  s?: number | null
+  t?: string | null
+}
+
+export interface GatewayActivity {
+  name: string
+  type: number
+}
+
 export type { SetActivity }

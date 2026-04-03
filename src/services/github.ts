@@ -58,4 +58,25 @@ export class GitHubService {
   async getQueuedCopilotRuns(owner: string, repo: string): Promise<CopilotAgentRun[]> {
     return this.getRunsByStatus(owner, repo, "queued")
   }
+
+  /** Returns a single workflow run by its ID, or null if not found. */
+  async getRun(owner: string, repo: string, runId: number): Promise<CopilotAgentRun | null> {
+    const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/actions/runs/${runId}`
+    const run = (await this.fetchAPI(url)) as Record<string, unknown> | null
+    if (!run) return null
+    return {
+      id: run.id as number,
+      owner,
+      repo,
+      displayTitle:
+        (run.display_title as string) ||
+        ((run.head_commit as Record<string, unknown>)?.message as string | undefined)?.split(
+          "\n",
+        )[0] ||
+        "Coding task",
+      branch: (run.head_branch as string) || "",
+      status: run.status as string,
+      createdAt: run.created_at as string,
+    }
+  }
 }

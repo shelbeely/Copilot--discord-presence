@@ -1,11 +1,21 @@
+import { startBotDaemon } from "./bot-daemon.js"
 import { startDaemon } from "./daemon.js"
 
+export { startBotDaemon } from "./bot-daemon.js"
 export { startDaemon } from "./daemon.js"
 export default startDaemon
 
 if (import.meta.main) {
-  startDaemon().catch((err) => {
-    console.error("[copilot-presence] Fatal error:", err)
-    process.exit(1)
-  })
+  const args = process.argv.slice(2)
+  if (args.includes("--bot") || process.env.COPILOT_BOT_MODE === "true") {
+    startBotDaemon().catch((err) => {
+      console.error("[copilot-presence] Fatal error:", err)
+      process.exit(1)
+    })
+  } else {
+    startDaemon().catch((err) => {
+      console.error("[copilot-presence] Fatal error:", err)
+      process.exit(1)
+    })
+  }
 }

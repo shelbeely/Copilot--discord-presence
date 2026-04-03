@@ -21,6 +21,7 @@
   ],
   "scripts": {
     "dev": "bun run --watch src/index.ts",
+    "bot": "bun run src/bot-daemon.ts",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/",

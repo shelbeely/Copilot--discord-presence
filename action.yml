@@ -1,0 +1,43 @@
+name: "Copilot Discord Presence"
+description: "Shows Discord bot presence during GitHub Copilot cloud agent coding sessions"
+branding:
+  icon: "activity"
+  color: "blue"
+
+inputs:
+  version:
+    description: "Version of copilot-discord-presence to install (default: latest)"
+    required: false
+    default: "latest"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install copilot-discord-presence
+      shell: bash
+      run: npm install -g copilot-discord-presence@${{ inputs.version }}
+
+    - name: Install hook scripts
+      shell: bash
+      run: |
+        mkdir -p .github/hooks/scripts
+
+        cp "${{ github.action_path }}/template/.github/hooks/scripts/session-start.sh" \
+          .github/hooks/scripts/session-start.sh
+        cp "${{ github.action_path }}/template/.github/hooks/scripts/validate.sh" \
+          .github/hooks/scripts/validate.sh
+
+        chmod +x .github/hooks/scripts/session-start.sh
+        chmod +x .github/hooks/scripts/validate.sh
+
+    - name: Write copilot.json (if not present)
+      shell: bash
+      run: |
+        if [ ! -f .github/hooks/copilot.json ]; then
+          mkdir -p .github/hooks
+          cp "${{ github.action_path }}/template/.github/hooks/copilot.json" \
+            .github/hooks/copilot.json
+          echo "[copilot-presence] Created .github/hooks/copilot.json"
+        else
+          echo "[copilot-presence] .github/hooks/copilot.json already exists — skipping (merge manually if needed)"
+        fi

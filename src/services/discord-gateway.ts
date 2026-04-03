@@ -70,14 +70,18 @@ export class DiscordGatewayService {
     switch (payload.op) {
       case OP_HELLO: {
         const data = payload.d as { heartbeat_interval: number }
+        // Validate the server-provided interval (Discord normally sends ~41250ms).
+        // Reject values outside [5000, 120000] ms to prevent resource exhaustion.
+        const raw = Number(data.heartbeat_interval)
+        const interval = raw >= 5000 && raw <= 120000 ? raw : 41250
         // Jitter the first heartbeat to avoid thundering herd
         const jitter = Math.random()
         setTimeout(
           () => {
             this.sendHeartbeat()
-            this.startHeartbeat(data.heartbeat_interval)
+            this.startHeartbeat(interval)
           },
-          Math.floor(jitter * data.heartbeat_interval),
+          Math.floor(jitter * interval),
         )
         this.identify()
         break

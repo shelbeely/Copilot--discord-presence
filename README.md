@@ -13,6 +13,7 @@ Display your [GitHub Copilot cloud agent](https://docs.github.com/en/copilot/con
 - **Task display** — Shows the current task title (from the workflow run's `display_title`)
 - **Repo context** — Shows which `owner/repo` Copilot is working in
 - **Multi-repo support** — Watch multiple repositories simultaneously
+- **Bot presence mode** — Runs headlessly inside GitHub Actions as a Discord bot (no desktop client needed)
 - **Korean language support** — Proper Korean particle handling (이/가, 을/를, 은/는)
 - **Auto-reconnect** — Handles Discord disconnections gracefully
 
@@ -167,16 +168,86 @@ bun run build
 ```
 src/
 ├── index.ts              # Entry point — starts daemon when run directly
-├── daemon.ts             # Core polling daemon
+├── daemon.ts             # Core polling daemon (Discord RPC, local desktop client)
+├── bot-daemon.ts         # Bot presence daemon (Discord Gateway, runs in GitHub Actions)
+├── init.ts               # `init` command — scaffolds hook files into any repo
 ├── config.ts             # Configuration management
 ├── types/
 │   └── index.ts          # TypeScript type definitions
 ├── services/
 │   ├── discord-rpc.ts    # Discord RPC service (singleton, auto-reconnect)
+│   ├── discord-gateway.ts# Discord Gateway WebSocket client (bot mode)
 │   └── github.ts         # GitHub Actions API polling
 └── utils/
     └── particle.ts       # Korean particle handling (이/가, 을/를, 은/는)
 ```
+
+## Adding to Other Repos
+
+There are four ways to add Discord bot presence to any repository that uses Copilot cloud agent:
+
+### Option 1 — CLI `init` (recommended)
+
+Run from the root of any repo that has `copilot-discord-presence` installed:
+
+```bash
+npx copilot-discord-presence init
+# or if installed globally:
+copilot-discord-presence init
+```
+
+This writes `.github/hooks/copilot.json`, `.github/hooks/scripts/session-start.sh`,
+`.github/hooks/scripts/validate.sh`, and `.github/workflows/copilot-setup-steps.yml`
+into the current directory.
+
+### Option 2 — Install script
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/shelbeely/Copilot--discord-presence/main/install.sh | bash
+```
+
+Downloads the same four files from GitHub and drops them into the current repo.
+
+### Option 3 — Composite GitHub Action
+
+Add one step to your existing `copilot-setup-steps.yml`:
+
+```yaml
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    environment: copilot        # gives access to DISCORD_BOT_TOKEN secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shelbeely/Copilot--discord-presence@v1
+```
+
+The action installs the package globally and writes the hook scripts at setup time. You still need
+to commit `.github/hooks/copilot.json` yourself (the action skips it if it already exists, and
+creates it if it doesn't).
+
+### Option 4 — Copy template files
+
+Copy everything under [`template/`](./template) into your repo:
+
+```
+template/
+├── .github/
+│   ├── hooks/
+│   │   ├── copilot.json
+│   │   └── scripts/
+│   │       ├── session-start.sh
+│   │       └── validate.sh
+│   └── workflows/
+│       └── copilot-setup-steps.yml
+```
+
+### After any of the above
+
+1. Add `DISCORD_BOT_TOKEN` as a secret:
+   **GitHub → Settings → Environments → copilot → Secrets → New secret**
+2. Commit the generated files and push
+3. Copilot will show Discord bot presence on its next session
 
 ## Contributing
 
